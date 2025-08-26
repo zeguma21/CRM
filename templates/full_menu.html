@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Our Full Menu</h2>
+
+    <!-- Category Scroll Buttons -->
+    <div class="mb-4 text-center">
+        {% for category in category_products.keys %}
+            <a href="#category-{{ category.id }}" class="btn btn-outline-success m-1">{{ category.name }}</a>
+        {% endfor %}
+    </div>
+
+    {% for category, products in category_products.items %}
+        <div class="mb-5" id="category-{{ category.id }}">
+            <h3 class="text-success">{{ category.name }}</h3>
+            <div class="row">
+                {% for product in products %}
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 180px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="card-text text-muted small">{{ product.description|truncatechars:50 }}</p>
+                                <div class="mt-auto">
+                                    <strong>Rs {{ product.price }}</strong>
+                                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-success btn-sm mt-2 w-100">Add to Cart</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">No products available in this category.</p>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Full Banner Section -->
+<div class="banner-section" style="
+    background: url('{% static 'images/banner.jpg' %}') no-repeat center center;
+    background-size: cover;
+    height: 100vh; /* Full screen height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;">
+    <h1 style="font-size: 3rem; background: rgba(0,0,0,0.5); padding: 200px; border-radius: 100px;">
+        Welcome to Our Restaurant
+    </h1>
+</div>
+
+<!-- Menu & Rest of Content -->
+<div class="container mt-5">
+    <h2 class="text-center">Our Menu</h2>
+    <!-- Aapka menu HTML yahan ayega -->
+</div>
+
+{% endblock %}
+
+

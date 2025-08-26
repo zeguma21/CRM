@@ -1,0 +1,29 @@
+<h2>Manage Orders</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Customer</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    {% for order in orders %}
+    <tr>
+        <td>{{ order.id }}</td>
+        <td>{{ order.full_name }}</td>
+        <td>{{ order.total_price }}</td>
+        <td>{{ order.status }}</td>
+        <td>
+            <form method="post" action="{% url 'update_order_status' order.id %}">
+                {% csrf_token %}
+                <select name="status">
+                    <option {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                    <option {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                </select>
+                <button type="submit">Update</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">My Account</h2>
+
+    <div class="mb-5">
+        <h4>My Orders</h4>
+        {% if orders %}
+            <ul class="list-group">
+                {% for order in orders %}
+                <li class="list-group-item">
+                    <strong>Order #{{ order.id }}</strong> — {{ order.created_at|date:"M d, Y" }} — {{ order.status }}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No orders found.</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <h4>My Reviews</h4>
+        {% if reviews %}
+            {% for r in reviews %}
+            <div class="border p-3 mb-2">
+                ⭐ {{ r.rating }} — {{ r.created_at|date:"M d, Y H:i" }}
+                <p class="mb-0">{{ r.comment }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No reviews submitted.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Top Navbar -->
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Super Shinwari Admin</a>
+        <a class="btn btn-danger" href="{% url 'logout' %}">Logout</a>
+    </div>
+</nav>
+
+<!-- Main Dashboard -->
+<div class="container">
+    <h2 class="mb-4 text-center">Admin Dashboard</h2>
+
+    <div class="row text-center">
+        <div class="col-md-3 mb-3">
+            <div class="card shadow p-3">
+                <h4>Categories</h4>
+                <p class="display-6">{{ total_categories }}</p>
+                <a href="{% url 'manage_categories' %}" class="btn btn-sm btn-primary mt-2">Manage</a>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow p-3">
+                <h4>Products</h4>
+                <p class="display-6">{{ total_products }}</p>
+                <a href="{% url 'manage_products' %}" class="btn btn-sm btn-primary mt-2">Manage</a>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow p-3">
+                <h4>Orders</h4>
+                <p class="display-6">{{ total_orders }}</p>
+                <a href="{% url 'admin_orders' %}" class="btn btn-sm btn-primary mt-2">View Orders</a>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow p-3">
+                <h4>Users</h4>
+                <p class="display-6">{{ total_users }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Stats -->
+    <div class="row text-center mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5>Total Orders</h5>
+                    <h2>{{ total_orders }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5>Total Revenue</h5>
+                    <h2>Rs. {{ total_revenue }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5>Total Customers</h5>
+                    <h2>{{ total_customers }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Chart -->
+    <div class="mt-5">
+        <h4 class="text-center mb-3">📊 Sales Overview</h4>
+        <canvas id="salesChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('salesChart');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{ labels|safe }},
+    datasets: [{
+      label: 'Orders',
+      data: {{ data|safe }},
+      borderWidth: 1,
+      backgroundColor: 'rgba(255, 99, 132, 0.6)'
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

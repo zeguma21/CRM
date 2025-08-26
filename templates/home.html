@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- 🌟 Hero Section -->
+<div class="hero-section text-center text-white d-flex align-items-center justify-content-center"
+     style="height:100vh; 
+            background: url('{% static "images/hero-bg.jpg" %}') center/cover no-repeat;
+            position: relative;">
+    
+    <!-- Overlay -->
+    <div style="position: absolute; top:0; left:0; width:100%; height:100%; 
+                background: rgba(0,0,0,0.4); z-index:1;"></div>
+
+    <!-- Text Content -->
+    <div style="z-index:2;">
+        <h1 class="display-3 fw-bold animate__animated animate__fadeInDown">
+            Welcome to <span class="text-warning">Super Shinwari</span>
+        </h1>
+        <p class="lead animate__animated animate__fadeInUp">
+            Taste the Authentic Shinwari Flavors 🔥
+        </p>
+        <a href="{% url 'products' %}" 
+           class="btn btn-warning btn-lg mt-3 shadow-lg animate__animated animate__bounceIn">
+            🍽️ Order Now
+        </a>
+    </div>
+</div>
+
+<!-- 🔐 Login/Register Buttons -->
+<div class="container text-center my-5">
+    <h2 class="mb-4">Quick Access</h2>
+    <a href="{% url 'login' %}" class="btn btn-outline-primary me-2"><i class="bi bi-person"></i> User Login</a>
+    <a href="{% url 'register' %}" class="btn btn-outline-success me-2"><i class="bi bi-person-plus"></i> Register</a>
+    <a href="{% url 'admin_login' %}" class="btn btn-outline-danger"><i class="bi bi-shield-lock"></i> Admin Login</a>
+</div>
+
+<!-- 👇 Menu Section by Category -->
+<div id="menu-section" class="bg-light py-5">
+{% if category_products %}
+    {% for category, products in category_products.items %}
+        <section class="my-5 container">
+            {% if category.banner %}
+                <div class="mb-3">
+                    <img src="{{ category.banner.url }}" class="img-fluid rounded shadow" 
+                         style="max-height: 300px; width: 100%; object-fit: cover;" 
+                         alt="{{ category.name }}">
+                </div>
+            {% endif %}
+            <h3 class="text-center mb-4 text-primary">{{ category.name }}</h3>
+
+            <div class="row">
+                {% for product in products %}
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100 shadow-sm rounded hover-effect position-relative">
+
+                            <!-- 🏷️ Discount Badge -->
+                            {% if product.discount_price %}
+                                <span class="badge bg-danger position-absolute top-0 start-0 m-2">Sale</span>
+                            {% endif %}
+
+                            <img src="{{ product.image.url }}" class="card-img-top" 
+                                 alt="{{ product.name }}" 
+                                 style="height: 200px; object-fit: cover;">
+
+                            <div class="card-body d-flex flex-column text-center">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="card-text text-muted small">{{ product.description|truncatechars:60 }}</p>
+
+                                <!-- ✅ Show Discount + Original Price -->
+                                {% if product.discount_price %}
+                                    <p>
+                                        <span class="text-danger fw-bold">Rs {{ product.discount_price }}</span>
+                                        <del class="text-muted small">Rs {{ product.price }}</del>
+                                    </p>
+                                {% else %}
+                                    <p class="fw-bold">Rs {{ product.price }}</p>
+                                {% endif %}
+
+                                <!-- 🔗 View Product -->
+                                <a href="{% url 'product_detail' product.id %}" 
+                                   class="btn btn-primary btn-sm w-100 mb-2">
+                                   View
+                                </a>
+
+                                <!-- 🛒 Add to Cart Form -->
+                                <form method="post" action="{% url 'add_to_cart' product.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm w-100">
+                                        <i class="bi bi-cart-plus"></i> Add to Cart
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% empty %}
+        <p class="text-center text-muted">No categories or products found.</p>
+    {% endfor %}
+{% endif %}
+</div>
+
+<!-- 📋 Category Grid -->
+{% if categories %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Our Menu Categories</h2>
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm h-100 hover-effect">
+                <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}"
+                     style="height: 200px; object-fit: cover;">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ category.name }}</h5>
+                    <a href="{% url 'products_by_category' category.id %}" 
+                       class="btn btn-primary btn-sm">
+                       View Items
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- 🛒 Featured Products Section -->
+<div class="container mt-5">
+    <h3 class="mb-4">Our Featured Dishes</h3>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm position-relative">
+
+                <!-- 🏷️ Discount Badge -->
+                {% if product.discount_price %}
+                    <span class="badge bg-danger position-absolute top-0 start-0 m-2">Sale</span>
+                {% endif %}
+
+                <!-- Product Image -->
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                {% else %}
+                    <img src="{% static 'images/default.jpg' %}" class="card-img-top" alt="{{ product.name }}">
+                {% endif %}
+
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ product.name }}</h5>
+
+                    <!-- ✅ Discount & Price -->
+                    {% if product.discount_price %}
+                        <p>
+                            <span class="text-danger fw-bold">Rs {{ product.discount_price }}</span>
+                            <del class="text-muted small">Rs {{ product.price }}</del>
+                        </p>
+                    {% else %}
+                        <p class="fw-bold">Rs {{ product.price }}</p>
+                    {% endif %}
+
+                    <a href="{% url 'product_detail' product.id %}" class="btn btn-primary btn-sm">View</a>
+                    <form method="post" action="{% url 'add_to_cart' product.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No products available.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 👤 User Dashboard Links -->
+{% if user.is_authenticated %}
+    <div class="container text-center my-4">
+        {% if user.is_staff %}
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-danger shadow">
+                <i class="bi bi-speedometer2"></i> Admin Dashboard
+            </a>
+        {% else %}
+            <a href="{% url 'user_dashboard' %}" class="btn btn-primary shadow">
+                <i class="bi bi-person-circle"></i> My Dashboard
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- ✨ Extra CSS for hover effect -->
+<style>
+.hover-effect:hover {
+    transform: translateY(-5px);
+    transition: 0.3s;
+    box-shadow: 0px 8px 20px rgba(0,0,0,0.2);
+}
+</style>
+
+{% endblock %}

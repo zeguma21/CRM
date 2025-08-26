@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">👤 My Dashboard</h2>
+
+    <div class="row">
+        <!-- My Orders -->
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">📦 My Orders</h5>
+                    <p class="card-text">Track and view your past orders.</p>
+                    <a href="{% url 'my_orders' %}" class="btn btn-primary">View Orders</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Cart -->
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🛒 My Cart</h5>
+                    <p class="card-text">View items in your shopping cart.</p>
+                    <a href="{% url 'view_cart' %}" class="btn btn-warning">Go to Cart</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">👤 My Profile</h5>
+                    <p class="card-text">Update your account details.</p>
+                    <a href="{% url 'profile' %}" class="btn btn-success">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome message -->
+    <div class="mt-5 text-center">
+        <h4>Welcome to User Dashboard 🎉</h4>
+    </div>
+</div>
+{% endblock %}

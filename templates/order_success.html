@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container d-flex flex-column align-items-center justify-content-center mt-5" style="min-height: 70vh;">
+    <div class="card shadow-lg p-4 text-center" style="max-width: 500px; width: 100%;">
+        <div class="text-success mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.97 10.03a.75.75 0 0 0 1.08 0l3.992-3.992a.75.75 0 1 0-1.08-1.08L7.5 8.439 6.022 6.97a.75.75 0 1 0-1.08 1.08l2.028 2.028z"/>
+            </svg>
+        </div>
+        <h3 class="text-success">Order Placed Successfully!</h3>
+        <p class="mb-4">Thank you so much for placing the order ! our team processed as soon as posibile .</p>
+        <a href="{% url 'home' %}" class="btn btn-outline-primary">🏠 Back to Home</a>
+    </div>
+</div>
+{% endblock %}

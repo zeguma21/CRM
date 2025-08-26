@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6">
+            <img src="{{ product.image.url }}" class="img-fluid rounded shadow-sm" alt="{{ product.name }}">
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-6">
+            <h2>{{ product.name }}</h2>
+
+            <!-- Price / Discount Handling -->
+            {% if product.discount_price %}
+                <p class="fs-5">
+                    <span class="text-danger fw-bold">Rs. {{ product.discount_price }}</span>
+                    <del class="text-muted">Rs. {{ product.price }}</del>
+                </p>
+            {% else %}
+                <p class="text-muted fs-5">Rs. {{ product.price }}</p>
+            {% endif %}
+
+            <p>{{ product.description }}</p>
+
+            <!-- ✅ Add to Cart Form -->
+            <form method="POST" action="{% url 'add_to_cart' product.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success mt-3">🛒 Add to Cart</button>
+            </form>
+
+            <!-- Back to Menu Link -->
+            <a href="{% url 'products' product.category.id %}" class="btn btn-secondary mt-3">⬅ Back to Menu</a>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="mt-5">
+        <h4>Customer Reviews</h4>
+        {% for review in product.reviews.all %}
+            <div class="border p-3 mb-2 rounded">
+                <strong>{{ review.user.username }}</strong> - ⭐ {{ review.rating }}/5
+                <p>{{ review.comment }}</p>
+            </div>
+        {% empty %}
+            <p>No reviews yet.</p>
+        {% endfor %}
+
+        <!-- Review Form -->
+        <h5 class="mt-4">Leave a Review</h5>
+        <form method="POST" action="{% url 'add_review' product.id %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+    </div>
+
+    <!-- Related Products -->
+    <div class="mt-5">
+        <h3>You may also like</h3>
+        <div class="row">
+            {% for item in related %}
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}">
+                        <div class="card-body text-center">
+                            <h6>{{ item.name }}</h6>
+                            <a href="{% url 'product_detail' item.id %}" class="btn btn-sm btn-outline-primary mt-2">View</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No related products available.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

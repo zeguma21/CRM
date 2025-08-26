@@ -1,0 +1,239 @@
+/* -------------------- Global Styling -------------------- */
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    transition: background 0.3s, color 0.3s;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* -------------------- Navbar -------------------- */
+.navbar {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand img {
+    margin-right: 8px;
+    position: relative;
+    z-index: 2; /* Ensures logo is above blurred background */
+}
+
+/* -------------------- Logo Banner Background -------------------- */
+.logo-banner {
+    position: relative;
+    background: url("../images/logo-bg.jpg") center/cover no-repeat;
+    padding: 20px 0;
+    z-index: 1;
+}
+
+.logo-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    filter: blur(4px);
+    opacity: 0.6;
+    z-index: 0;
+}
+
+/* -------------------- Hero Section -------------------- */
+.hero-section {
+    position: relative;
+    text-align: center;
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    overflow: hidden;
+}
+
+.hero-section::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5); /* dark overlay for text readability */
+    z-index: 1;
+}
+
+.hero-section img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(70%);
+    z-index: 0;
+}
+
+.hero-section .hero-text {
+    position: relative;
+    z-index: 2;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.hero-section h1 {
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.hero-section p {
+    font-size: 1.2rem;
+}
+
+/* -------------------- Cards -------------------- */
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card-img-top,
+.card img {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* -------------------- Buttons -------------------- */
+.btn-primary {
+    background-color: #ff7f00;
+    border-color: #ff7f00;
+}
+
+.btn-primary:hover {
+    background-color: #e56e00;
+    border-color: #e56e00;
+}
+
+.btn-warning {
+    font-weight: bold;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* -------------------- Footer -------------------- */
+footer {
+    background: #222;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+}
+
+/* -------------------- Utility Classes -------------------- */
+.text-shadow {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* -------------------- Responsive Fixes -------------------- */
+@media (max-width: 768px) {
+    .hero-section {
+        height: 60vh;
+    }
+
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+
+    .hero-section p {
+        font-size: 1rem;
+    }
+
+    .card-img-top,
+    .card img {
+        height: 160px;
+    }
+}
+
+/* -------------------- ⭐ Review Section Styling -------------------- */
+.review-box {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fafafa;
+}
+
+.review-box strong {
+    font-size: 16px;
+    color: #333;
+}
+
+.review-box small {
+    font-size: 13px;
+    color: #888;
+}
+
+.review-box div {
+    font-weight: bold;
+    margin-top: 5px;
+    color: #28a745;
+}
+
+.review-box p {
+    margin-top: 8px;
+}
+
+/* -------------------- Categories Scroll Section -------------------- */
+.categories .row {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 15px;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 10px;
+}
+
+.categories .card {
+    min-width: 200px;
+    border-radius: 15px;
+    transition: transform 0.3s;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+}
+
+.categories .card:hover {
+    transform: translateY(-5px);
+}
+
+/* -------------------- 🌙 Dark Mode -------------------- */
+.dark-mode {
+    background-color: #121212;
+    color: #f8f9fa;
+}
+
+.dark-mode .card {
+    background-color: #1e1e1e;
+    color: white;
+}
+
+.dark-mode .navbar,
+.dark-mode footer {
+    background-color: #1c1c1c !important;
+}
+
+.dark-mode .btn-primary {
+    background-color: #bb86fc;
+    border-color: #bb86fc;
+}
+
+.dark-mode .btn-primary:hover {
+    background-color: #9d6be3;
+    border-color: #9d6be3;
+}

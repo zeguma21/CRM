@@ -1,0 +1,49 @@
+{% extends 'admin_dashboard.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Edit Product - {{ product.name }}</h2>
+    <div class="card shadow p-4">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="id_name" class="form-label">Name</label>
+                {{ form.name }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_description" class="form-label">Description</label>
+                {{ form.description }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_price" class="form-label">Price</label>
+                {{ form.price }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_image" class="form-label">Image</label><br>
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-thumbnail mb-2" style="max-width: 150px;">
+                {% endif %}
+                {{ form.image }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_category" class="form-label">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div class="mb-3 form-check">
+                {{ form.is_featured }} 
+                <label class="form-check-label" for="id_is_featured">Featured</label>
+            </div>
+
+            <button type="submit" class="btn btn-success">Save Changes</button>
+            <a href="{% url 'manage_products' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

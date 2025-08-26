@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">👤 My Profile</h2>
+    <p><strong>Name:</strong> {{ request.user.get_full_name }}</p>
+    <p><strong>Email:</strong> {{ request.user.email }}</p>
+
+    <h4 class="mt-5">🧾 My Orders</h4>
+    {% if orders %}
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Placed On</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                    <td>Rs {{ order.total }}</td>
+                    <td>{{ order.get_status_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You haven't placed any orders yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

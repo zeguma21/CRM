@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">🧾 My Orders</h2>
+
+    {% if orders %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Status</th>
+                    <th>Total Amount</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if order.status == 'Pending' %}bg-warning
+                            {% elif order.status == 'Preparing' %}bg-primary
+                            {% elif order.status == 'On the Way' %}bg-info
+                            {% elif order.status == 'Delivered' %}bg-success
+                            {% else %}bg-secondary{% endif %}">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td>Rs {{ order.total_price }}</td>
+                    <td>{{ order.created_at|date:"M d, Y - H:i" }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#items-{{ order.id }}">
+                            View Items
+                        </button>
+                        <div id="items-{{ order.id }}" class="collapse mt-2">
+                            <ul class="list-unstyled small mb-0">
+                                {% for item in order.items.all %}
+                                    <li>{{ item.product.name }} × {{ item.quantity }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{% url 'track_order' order.id %}" class="btn btn-info btn-sm">Track</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-center text-muted">You haven’t placed any orders yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

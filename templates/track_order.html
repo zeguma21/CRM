@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Track Your Order</h3>
+    <p><strong>Order ID:</strong> {{ order.id }}</p>
+    <p><strong>Status:</strong> {{ order.status }}</p>
+    <p><strong>Total:</strong> Rs {{ order.total_price }}</p>
+    <p><strong>Placed on:</strong> {{ order.created_at|date:"M d, Y H:i" }}</p>
+</div>
+{% endblock %}

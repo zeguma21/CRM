@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Checkout</h2>
+    
+    <div class="row">
+        <!-- Billing Details -->
+        <div class="col-md-6">
+            <form method="post">
+                {% csrf_token %}
+                <h4>Billing Details</h4>
+                
+                <div class="mb-3">
+                    <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name</label>
+                    {{ form.full_name|add_class:"form-control" }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                    {{ form.address|add_class:"form-control" }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
+                    {{ form.phone|add_class:"form-control" }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                    {{ form.email|add_class:"form-control" }}
+                </div>
+
+                {% if user.is_authenticated %}
+                <div class="mb-3">
+                    <h5>Apply Loyalty Points</h5>
+                    <input type="hidden" name="order_total" value="{{ total }}">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Use Points</span>
+                        <input type="number" name="points" class="form-control" min="0" placeholder="e.g. 50">
+                        <button class="btn btn-outline-primary" type="submit" formaction="{% url 'apply_points' %}">Apply</button>
+                    </div>
+                    <small class="form-text text-muted">Available: {{ loyalty_balance|default:0 }} pts</small>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-success w-100">Place Order</button>
+            </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-md-6">
+            <h4>Order Summary</h4>
+            <ul class="list-group mb-3">
+                {% for item in cart_items %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <div>
+                        <h6 class="my-0">{{ item.product.name }}</h6>
+                        <small class="text-muted">Qty: {{ item.quantity }}</small>
+                    </div>
+                    <span class="text-muted">Rs. {{ item.product.price|floatformat:0 }}</span>
+                </li>
+                {% endfor %}
+                <li class="list-group-item d-flex justify-content-between fw-bold">
+                    <strong>Total</strong>
+                    <strong>Rs. {{ total|floatformat:0 }}</strong>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

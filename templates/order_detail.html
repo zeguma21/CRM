@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">🧾 Order Details</h2>
+
+    <!-- Customer Info -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <strong>Customer Information</strong>
+        </div>
+        <div class="card-body">
+            <p><strong>Full Name:</strong> {{ order.full_name }}</p>
+            <p><strong>Phone:</strong> {{ order.phone }}</p>
+            <p><strong>Address:</strong> {{ order.address }}</p>
+            <p><strong>Order Date:</strong> {{ order.created_at|date:"M d, Y H:i" }}</p>
+            <p><strong>Status:</strong>
+                {% if order.status == "Pending" %}
+                    <span class="badge bg-warning">Pending</span>
+                {% elif order.status == "Completed" %}
+                    <span class="badge bg-success">Completed</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ order.status }}</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <strong>Order Items</strong>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price (PKR)</th>
+                        <th>Subtotal (PKR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.product.price }}</td>
+                            <td>{{ item.get_subtotal }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="3" class="text-end">Total:</th>
+                        <th>{{ order.get_total }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="mt-4 text-center">
+        <a href="{% url 'my_orders' %}" class="btn btn-outline-secondary">
+            ⬅ Back to My Orders
+        </a>
+    </div>
+</div>
+{% endblock %}
