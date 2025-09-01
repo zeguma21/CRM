@@ -1,11 +1,13 @@
 from django import forms
 from .models import (
     Branch, Category, Product, Order, Review,
-    ContactMessage, NewsletterSubscriber, Feedback
+    ContactMessage, NewsletterSubscriber, Feedback, Profile  # Profile add karna hoga
 )
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
 # ============================
-#       Branch Form (optional)
+#       Branch Form
 # ============================
 class BranchForm(forms.ModelForm):
     class Meta:
@@ -125,3 +127,27 @@ class FeedbackForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
         }
+
+
+# ============================
+#   Custom User Creation Form
+# ============================
+class CustomUserCreationForm(UserCreationForm):
+    phone = forms.CharField(max_length=15, required=True)
+    address = forms.CharField(widget=forms.Textarea, required=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2', 'phone', 'address']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            # Profile model me extra data save karna
+            Profile.objects.create(
+                user=user,
+                phone=self.cleaned_data['phone'],
+                address=self.cleaned_data['address']
+            )
+        return user

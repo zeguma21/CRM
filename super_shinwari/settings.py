@@ -8,13 +8,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ---------- Security ----------
 # NOTE: Development ke liye theek hai; production me env se load karna.
-SECRET_KEY = 'django-insecure-riwe#29@ej(vuhn!=91@a3rup57zsj1ye+m(=_rk9%4z@)5(fo'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-riwe#29@ej(vuhn!=91@a3rup57zsj1ye+m(=_rk9%4z@)5(fo")
 
 # Development me True rakho, deployment (production) me False karo
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 # Dev ke liye '*', prod me apna domain/host dalna
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 # ---------- Installed Apps ----------
 INSTALLED_APPS = [
@@ -105,8 +105,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------- Email Backend ----------
 # Dev: console backend. Production: SMTP settings configure karo.
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'admin@super-shinwari.com'
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "admin@super-shinwari.com")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # ---------- Authentication Redirects ----------
@@ -124,3 +124,7 @@ LANGUAGES = [
 # 2% earn rate; 1 point = Rs 1
 LOYALTY_EARN_RATE = Decimal("0.02")
 LOYALTY_POINT_VALUE = Decimal("1.0")
+
+# ---------- Stripe Settings ----------
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "pk_test_XXXXXXXXXXXXXXXX")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_XXXXXXXXXXXXXXXX")

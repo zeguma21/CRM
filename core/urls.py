@@ -1,4 +1,3 @@
-# core/urls.py
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
@@ -10,11 +9,11 @@ urlpatterns = [
     path('branch/select/', views.select_branch, name='select_branch'),
     path('branch/select/<int:branch_id>/', views.select_branch_by_id, name='select_branch_by_id'),
     path('branch/clear/', views.clear_branch, name='clear_branch'),
-    path('set-branch/<int:branch_id>/', views.set_branch, name='set_branch'),  # ✅ only once
+    path('set-branch/<int:branch_id>/', views.set_branch, name='set_branch'),
 
     # ================= Public Pages =================
     path('categories/', views.categories, name='categories'),
-    path('products/', views.products, name='products'),  
+    path('products/', views.products, name='products'),
     path('products/<int:category_id>/', views.products, name='products_by_category'),
     path('search/', views.search_products, name='search_products'),
     path('contact/', views.contact, name='contact'),
@@ -65,8 +64,13 @@ urlpatterns = [
     path('admin-dashboard/products/edit/<int:pk>/', views.edit_product, name='edit_product'),
     path('admin-dashboard/products/delete/<int:pk>/', views.delete_product, name='delete_product'),
     path('product/<int:pk>/', views.product_detail, name='product_detail'),
+
+    # ================= Loyalty =================
     path("loyalty/", views.loyalty_dashboard, name="loyalty_dashboard"),
     path("loyalty/apply/", views.apply_points, name="apply_points"),
-    
 
+    # ================= Stripe / Payment =================
+    path("create-checkout-session/<int:order_id>/", views.create_checkout_session, name="create_checkout_session"),
+    path("payment/success/", views.payment_success, name="payment_success"),
+    path("payment/cancel/", views.payment_cancel, name="payment_cancel"),
 ]

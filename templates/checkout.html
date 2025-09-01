@@ -9,7 +9,7 @@
     <div class="row">
         <!-- Billing Details -->
         <div class="col-md-6">
-            <form method="post">
+            <form method="post" action="">
                 {% csrf_token %}
                 <h4>Billing Details</h4>
                 
@@ -46,7 +46,15 @@
                 </div>
                 {% endif %}
 
-                <button type="submit" class="btn btn-success w-100">Place Order</button>
+                <!-- Place Order -->
+                <button type="submit" class="btn btn-success w-100 mb-3">Place Order</button>
+
+                <!-- Stripe Payment (Card) -->
+                {% if order %}
+                <a href="{% url 'create_checkout_session' order.id %}" class="btn btn-primary w-100">
+                    Pay with Card
+                </a>
+                {% endif %}
             </form>
         </div>
 

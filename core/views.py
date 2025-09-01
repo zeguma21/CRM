@@ -1,9 +1,10 @@
-# core/views.py
 from decimal import Decimal
+import stripe
+
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.contrib.admin.views.decorators import staff_member_required
@@ -20,17 +21,21 @@ from .models import (
 from .forms import (
     CategoryForm, ProductForm, OrderForm,
     ProductFilterForm, ReviewForm, ContactForm,
-    NewsletterForm, OrderStatusForm, FeedbackForm
+    NewsletterForm, OrderStatusForm, FeedbackForm, CustomUserCreationForm
 )
 from .loyalty import get_profile, apply_redemption, redeem_points, award_points_for_order
 
 SESSION_BRANCH_KEY = "selected_branch_id"
+
+# configure stripe api key from settings (ensure settings has STRIPE_SECRET_KEY)
+stripe.api_key = getattr(settings, "STRIPE_SECRET_KEY", None)
 
 
 # ---------------- Helpers ----------------
 def _get_or_create_cart_for_user(user):
     cart, _ = Cart.objects.get_or_create(user=user)
     return cart
+
 
 def _get_selected_branch(request):
     branch_id = request.session.get(SESSION_BRANCH_KEY)
@@ -92,55 +97,60 @@ def products(request, category_id=None):
     selected_branch = _get_selected_branch(request)
     products_qs = Product.objects.all()
 
+    category = None
     if category_id:
         category = get_object_or_404(Category, id=category_id)
         products_qs = products_qs.filter(category=category)
-    else:
-        category = None
 
     if selected_branch:
         products_qs = products_qs.filter(Q(branch__isnull=True) | Q(branch=selected_branch))
 
     form = ProductFilterForm(request.GET or None)
     if form.is_valid():
-        if form.cleaned_data.get('min_price') is not None:
-            products_qs = products_qs.filter(price__gte=form.cleaned_data['min_price'])
-        if form.cleaned_data.get('max_price') is not None:
-            products_qs = products_qs.filter(price__lte=form.cleaned_data['max_price'])
+        min_price = form.cleaned_data.get('min_price')
+        max_price = form.cleaned_data.get('max_price')
+        if min_price is not None:
+            products_qs = products_qs.filter(price__gte=min_price)
+        if max_price is not None:
+            products_qs = products_qs.filter(price__lte=max_price)
 
-    categories = Category.objects.all()
+    categories_qs = Category.objects.all()
 
     return render(request, 'products.html', {
         'category': category,
         'products': products_qs,
         'filter_form': form,
-        'categories': categories,
+        'categories': categories_qs,
         'selected_branch': selected_branch
     })
 
 
 def search_products(request):
     query = request.GET.get('q', '').strip()
-    products = Product.objects.filter(Q(name__icontains=query) | Q(description__icontains=query)) if query else []
+    products = Product.objects.filter(Q(name__icontains=query) | Q(description__icontains=query)) if query else Product.objects.none()
     return render(request, 'search_results.html', {'query': query, 'products': products})
 
 
 def product_detail(request, product_id):
-    """Single correct product detail view."""
+    """Single product detail with review form handling."""
     product = get_object_or_404(Product, id=product_id)
     reviews = Review.objects.filter(product=product).order_by('-created_at')
     related = Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
 
     form = ReviewForm(request.POST or None)
     if request.method == 'POST':
-        if request.user.is_authenticated and form.is_valid():
+        if not request.user.is_authenticated:
+            messages.info(request, "Please login to submit a review.")
+            return redirect('login')
+        if form.is_valid():
             review = form.save(commit=False)
             review.product = product
             review.user = request.user
             review.save()
             messages.success(request, "Review submitted.")
             return redirect('product_detail', product_id=product.id)
-        return redirect('login')
+        else:
+            messages.error(request, "There was a problem with your review submission.")
 
     return render(request, 'product_detail.html', {
         'product': product,
@@ -150,14 +160,23 @@ def product_detail(request, product_id):
     })
 
 
-# ---------------- Registration ----------------
-def register_user(request):
-    form = UserCreationForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, "Account created — please login.")
-        return redirect('login')
-    return render(request, 'customer_register.html', {'form': form})
+# ---------------- Registration (single unified view) ----------------
+def register(request):
+    """
+    Uses CustomUserCreationForm (which should handle Profile creation inside form.save()).
+    """
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()  # form.save() should create User and Profile if implemented there
+            login(request, user)
+            messages.success(request, "Account created and logged in.")
+            return redirect('home')
+        else:
+            messages.error(request, "Please fix the errors below.")
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'register.html', {'form': form})
 
 
 # ---------------- Cart ----------------
@@ -174,16 +193,19 @@ def add_to_cart(request, product_id):
     messages.success(request, f"{product.name} added to cart.")
     return redirect('view_cart')
 
+
 @login_required
 def view_cart(request):
     cart = _get_or_create_cart_for_user(request.user)
     cart_items = CartItem.objects.filter(cart=cart).select_related('product')
     total_price = Decimal('0.00')
     for item in cart_items:
-        item_total = (item.product.price or Decimal('0.00')) * item.quantity
+        item_price = item.product.price or Decimal('0.00')
+        item_total = item_price * item.quantity
         setattr(item, 'item_total', item_total)
         total_price += item_total
     return render(request, 'cart.html', {'cart_items': cart_items, 'total_price': total_price})
+
 
 @login_required
 @require_POST
@@ -200,6 +222,7 @@ def update_cart(request, item_id):
     except (ValueError, TypeError):
         messages.error(request, "Invalid quantity.")
     return redirect('view_cart')
+
 
 @login_required
 def remove_cart_item(request, item_id):
@@ -226,23 +249,27 @@ def checkout(request):
         selected_branch = _get_selected_branch(request)
         if selected_branch:
             order.branch = selected_branch
+
         total_price = sum((item.product.price or Decimal('0.00')) * item.quantity for item in cart_items)
         order.total_price = total_price
         order.save()
+
         for item in cart_items:
             OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, price=item.product.price)
         cart_items.delete()
-        # award loyalty points if you have that logic
+
+        # award loyalty points (safe call)
         try:
             award_points_for_order(request.user, order)
         except Exception:
-            # don't break order flow if loyalty fails
             pass
+
         messages.success(request, "Order placed successfully.")
         return redirect("order_success")
 
     total = sum((item.product.price or Decimal('0.00')) * item.quantity for item in cart_items)
     return render(request, "checkout.html", {"cart_items": cart_items, "form": form, "total": total})
+
 
 @login_required
 def order_success(request):
@@ -254,10 +281,12 @@ def my_orders(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'my_orders.html', {'orders': orders})
 
+
 @login_required
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     return render(request, "order_detail.html", {"order": order})
+
 
 @login_required
 def track_order(request, order_id):
@@ -295,6 +324,7 @@ def admin_orders(request):
     orders = Order.objects.all().order_by('-created_at')
     return render(request, 'admin/manage_orders.html', {'orders': orders})
 
+
 @staff_member_required
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -312,13 +342,16 @@ def manage_categories(request):
     categories = Category.objects.all()
     return render(request, 'admin/manage_categories.html', {'categories': categories})
 
+
 @staff_member_required
 def add_category(request):
     form = CategoryForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
         form.save()
+        messages.success(request, "Category added.")
         return redirect('manage_categories')
     return render(request, 'admin/add_category.html', {'form': form})
+
 
 @staff_member_required
 def edit_category(request, pk):
@@ -326,27 +359,34 @@ def edit_category(request, pk):
     form = CategoryForm(request.POST or None, request.FILES or None, instance=category)
     if request.method == 'POST' and form.is_valid():
         form.save()
+        messages.success(request, "Category updated.")
         return redirect('manage_categories')
     return render(request, 'admin/edit_category.html', {'form': form, 'category': category})
+
 
 @staff_member_required
 def delete_category(request, pk):
     category = get_object_or_404(Category, pk=pk)
     category.delete()
+    messages.success(request, "Category deleted.")
     return redirect('manage_categories')
+
 
 @staff_member_required
 def manage_products(request):
     products = Product.objects.all()
     return render(request, 'admin/manage_products.html', {'products': products})
 
+
 @staff_member_required
 def add_product(request):
     form = ProductForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
         form.save()
+        messages.success(request, "Product added.")
         return redirect('manage_products')
     return render(request, 'admin/add_product.html', {'form': form})
+
 
 @staff_member_required
 def edit_product(request, pk):
@@ -354,13 +394,16 @@ def edit_product(request, pk):
     form = ProductForm(request.POST or None, request.FILES or None, instance=product)
     if request.method == 'POST' and form.is_valid():
         form.save()
+        messages.success(request, "Product updated.")
         return redirect('manage_products')
     return render(request, 'admin/edit_product.html', {'form': form, 'product': product})
+
 
 @staff_member_required
 def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     product.delete()
+    messages.success(request, "Product deleted.")
     return redirect('manage_products')
 
 
@@ -376,6 +419,8 @@ def add_review(request, product_id):
         review.product = product
         review.save()
         messages.success(request, "Review added.")
+    else:
+        messages.error(request, "Invalid review data.")
     return redirect('product_detail', product_id=product.id)
 
 
@@ -432,6 +477,7 @@ def my_account(request):
         'reviews': Review.objects.filter(user=request.user).order_by('-created_at')
     })
 
+
 @login_required
 def profile(request):
     if request.method == 'POST':
@@ -471,17 +517,19 @@ def select_branch(request):
             branch = Branch.objects.get(pk=int(branch_id))
             request.session[SESSION_BRANCH_KEY] = branch.id
             messages.success(request, f"Branch selected: {branch.name}")
-        except Branch.DoesNotExist:
+        except (Branch.DoesNotExist, ValueError):
             messages.error(request, "Selected branch not found.")
     else:
         messages.error(request, "No branch selected.")
     return redirect(next_url)
+
 
 def select_branch_by_id(request, branch_id):
     branch = get_object_or_404(Branch, id=branch_id)
     request.session[SESSION_BRANCH_KEY] = branch.id
     messages.success(request, f"Branch selected: {branch.name}")
     return redirect(request.META.get('HTTP_REFERER', '/'))
+
 
 def clear_branch(request):
     request.session.pop(SESSION_BRANCH_KEY, None)
@@ -513,6 +561,7 @@ def loyalty_dashboard(request):
         "transactions": txns
     })
 
+
 @login_required
 @require_POST
 def apply_points(request):
@@ -535,3 +584,84 @@ def apply_points(request):
     }
     messages.success(request, f"Applied {points} points (discount Rs {discount}).")
     return redirect(request.META.get("HTTP_REFERER", "/"))
+
+
+# ---------------- Stripe Checkout ----------------
+@login_required
+def create_checkout_session(request, order_id):
+    """
+    Create stripe checkout session for a given order.
+    - ensures order exists and belongs to current user (or staff).
+    - uses order.total_price if available, else tries order.total_amount.
+    """
+    order = get_object_or_404(Order, id=order_id)
+
+    # authorize: user must own order or be staff
+    if request.user != order.user and not request.user.is_staff:
+        messages.error(request, "You are not authorized to pay for this order.")
+        return redirect('my_orders')
+
+    # determine order amount (Decimal)
+    order_amount = getattr(order, "total_price", None) or getattr(order, "total_amount", None)
+    if order_amount is None:
+        messages.error(request, "Order has no amount set.")
+        return redirect('order_detail', order_id=order.id)
+
+    if not stripe.api_key:
+        messages.error(request, "Payment gateway not configured. Contact admin.")
+        return redirect('order_detail', order_id=order.id)
+
+    try:
+        # convert to integer cents/paisa (e.g., multiply by 100)
+        unit_amount = int((Decimal(order_amount) * 100).quantize(Decimal('1.')))
+
+        # choose currency from settings (default to PKR if not set) and ensure lowercase
+        currency = getattr(settings, "PAYMENT_CURRENCY", "PKR").lower()
+
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': currency,
+                    'product_data': {
+                        'name': f"Order #{order.id}",
+                    },
+                    'unit_amount': unit_amount,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=request.build_absolute_uri(f'/payment/success/?order={order.id}'),
+            cancel_url=request.build_absolute_uri(f'/payment/cancel/?order={order.id}'),
+        )
+        return redirect(session.url, code=303)
+    except stripe.error.StripeError as e:
+        messages.error(request, f"Stripe error: {str(e)}")
+        return redirect('order_detail', order_id=order.id)
+    except Exception as e:
+        messages.error(request, f"Payment initialization error: {e}")
+        return redirect('order_detail', order_id=order.id)
+
+
+def payment_success(request):
+    return render(request, "payment_success.html")
+
+
+def payment_cancel(request):
+    return render(request, "payment_cancel.html")
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+
+def register_user(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("home")
+    else:
+        form = UserCreationForm()
+    return render(request, "auth/register.html", {"form": form})
